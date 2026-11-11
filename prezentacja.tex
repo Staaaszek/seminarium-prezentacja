@@ -1,0 +1,101 @@
+% Seminarium: rozdział 2 pracy
+% J. Alman, V. Vassilevska Williams, "Truly Subquadratic 3SUM and Truly Subcubic
+% APSP via Triangles in Sparse Lopsided Graphs" (arXiv:2610.06783, 2026).
+% Budowanie: ./build.sh  (wersja z animacjami i wersja handout).
+\documentclass[aspectratio=169,10pt,t]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+\usefonttheme[onlymath]{serif}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{theorems}[numbered]
+\setbeamercovered{invisible}
+
+\usepackage[polish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing,fit,
+  backgrounds,shapes.misc,babel}
+% overlaye w TikZ: [visible on=<2->]
+\tikzset{
+  invisible/.style={opacity=0,text opacity=0},
+  visible on/.style={alt={#1{}{invisible}}},
+  alt/.code args={<#1>#2#3}{\alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}}}}
+
+% ------------------------------------------------------------------ kolory
+\colorlet{zew}{blue!65!black}        % zmienne zewnętrzne (iloczyn zewnętrzny)
+\colorlet{wew}{orange!90!black}      % zmienne wewnętrzne (iloczyn skalarny)
+\colorlet{chciane}{red!80!black}     % chciane wpisy / odwiedzane liście
+\colorlet{szary}{black!35}
+\colorlet{tlozew}{blue!12}
+\colorlet{tlowew}{orange!20}
+\newcommand{\Zew}[1]{\textcolor{zew}{#1}}
+\newcommand{\Wew}[1]{\textcolor{wew}{#1}}
+\newcommand{\Ch}[1]{\textcolor{chciane}{#1}}
+
+% ------------------------------------------------------------------ twierdzenia z numeracją jak w pracy
+\newcommand{\numer}{}
+\theoremstyle{plain}
+\newtheorem*{twX}{Twierdzenie~\numer}
+\newtheorem*{lemX}{Lemat~\numer}
+
+\newenvironment{twierdzenie}[1]{\renewcommand{\numer}{#1}\begin{twX}}{\end{twX}}
+\newenvironment{lemat}[1]{\renewcommand{\numer}{#1}\begin{lemX}}{\end{lemX}}
+\newenvironment{uwagaP}[1]{\renewcommand{\numer}{#1}\begin{uwX}}{\end{uwX}}
+\theoremstyle{definition}
+\newtheorem*{uwX}{Uwaga~\numer}
+\newtheorem*{definicja}{Definicja}
+\newtheorem*{obserwacja}{Obserwacja}
+\newtheorem*{wniosek}{Wniosek}
+\theoremstyle{example}
+\newtheorem*{przyklad}{Przykład}
+
+% ------------------------------------------------------------------ notacja z pracy
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Full}{\mathsf{Full}}
+\newcommand{\Pruned}{\mathsf{Pruned}}
+\newcommand{\Mult}{\mathsf{Mult}}
+\newcommand{\Leaves}{\mathsf{Leaves}}
+\newcommand{\ph}{\hat p}
+\newcommand{\qh}{\hat q}
+\newcommand{\pusty}{\epsilon}
+\newcommand{\idea}[1]{%
+  \begin{beamercolorbox}[rounded=true,shadow=true,sep=6pt]{block body alerted}%
+  \textbf{\textcolor{chciane}{Kluczowa idea.}} #1\end{beamercolorbox}}
+
+\AtBeginSection[]{%
+  \begin{frame}{Plan}
+    \tableofcontents[currentsection,hideallsubsections]
+  \end{frame}}
+
+\title[Rozdział 2: wybrane wpisy cienkiego iloczynu]{Szybkie liczenie wybranych wpisów\\ cienkiego iloczynu macierzy}
+\subtitle{Rozdział 2 pracy J.~Almana i V.~Vassilevskiej Williams (2026)}
+\author{[Imię Nazwisko]}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}[c]
+  \titlepage
+  \footnotesize\centering
+  J.~Alman, V.~Vassilevska Williams, \emph{Truly Subquadratic 3SUM and Truly Subcubic APSP\\
+  via Triangles in Sparse Lopsided Graphs}, arXiv:2610.06783, 2026.
+\end{frame}
+
+\begin{frame}{Plan}
+  \tableofcontents[hideallsubsections]
+\end{frame}
+
+\input{sekcje/01_twierdzenie5}
+\input{sekcje/02_strassen}
+\input{sekcje/03_schonhage}
+\input{sekcje/04_full}
+\input{sekcje/05_pruned}
+\input{sekcje/06_dowod}
+\input{sekcje/07_podsumowanie}
+
+\end{document}

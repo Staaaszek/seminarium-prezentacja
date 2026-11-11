@@ -1,0 +1,142 @@
+% ======================================================================
+\section{2.1 Rekurencyjny algorytm Strassena}
+% ======================================================================
+
+\begin{frame}{Tożsamość Strassena: macierze $2\times2$ przez 7 mnożeń}
+  Niech $A=(a_{ij})$ i $B=(b_{ij})$ będą macierzami $2\times2$. Tworzymy siedem iloczynów:
+  \begin{equation*}
+    \begin{aligned}
+      S_1&=(a_{11}+a_{22})(b_{11}+b_{22}), & S_5&=(a_{11}+a_{12})\,b_{22},\\
+      S_2&=(a_{21}+a_{22})\,b_{11},        & S_6&=(a_{21}-a_{11})(b_{11}+b_{12}),\\
+      S_3&=a_{11}(b_{12}-b_{22}),          & S_7&=(a_{12}-a_{22})(b_{21}+b_{22}),\\
+      S_4&=a_{22}(b_{21}-b_{11}),
+    \end{aligned}\tag{1}
+  \end{equation*}
+  \pause
+  i wtedy
+  \[
+    AB=\begin{pmatrix} S_1+S_4-S_5+S_7 & S_3+S_5\\ S_2+S_4 & S_1-S_2+S_3+S_6\end{pmatrix}.
+  \]
+  \pause
+  \begin{itemize}
+    \item Każde $S_r$ to \Zew{(kombinacja liniowa wpisów $A$)} $\times$ \Wew{(kombinacja liniowa wpisów $B$)}.
+    \item Każdy wpis $AB$ to kombinacja liniowa $S_1,\dots,S_7$.
+    \item \textbf{7 mnożeń zamiast 8.}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Rekurencja na blokach}
+  \begin{columns}[T]
+    \begin{column}{0.42\textwidth}
+      \small
+      \begin{itemize}
+        \item $A,B$ rozmiaru $N\times N$, gdzie $N=2^L$.
+        \item Traktujemy je jak macierze $2\times2$ \emph{bloków} rozmiaru $\frac N2\times\frac N2$.
+        \item<2-> Tożsamość nie korzysta z przemienności mnożenia, więc działa dla bloków.
+        \item<3-> Tworzymy 7 par kombinacji bloków, każdą parę mnożymy \emph{rekurencyjnie},
+          a z 7 wyników składamy 4 bloki $AB$.
+        \item<4-> Drzewo ma $L$ poziomów i $7^L$ liści, po jednym na każdy wybór jednego z 7
+          iloczynów na każdym poziomie.
+        \item<5-> Mnożenia są \textbf{w liściach}:
+          \[7^L=N^{\log_27}<N^{2.81}.\]
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.56\textwidth}
+      \centering
+      \begin{tikzpicture}[
+          v/.style={draw,rounded corners=2pt,fill=blue!8,font=\scriptsize,inner sep=2pt,minimum width=0.62cm},
+          scale=0.7,transform shape]
+        \node[v] (r) at (3.5,0) {$N\times N$};
+        \foreach \i in {1,...,7} {
+          \node<3->[v] (c\i) at ({(\i-1)*1.15},-1.5) {$\frac N2{\times}\frac N2$};
+          \draw<3-> (r.south) -- (c\i.north);
+        }
+        \foreach \i in {1,...,7} {
+          \foreach \j in {1,...,7} {
+            \draw<4->[szary] (c\i.south) -- ({(\i-1)*1.15+(\j-4)*0.14},-2.6);
+          }
+          \node<4->[font=\scriptsize] at ({(\i-1)*1.15},-2.9) {$\vdots$};
+        }
+        \node<4->[font=\small] at (3.5,-3.6) {$7^L$ liści: iloczyny dwóch liczb};
+        \draw<3->[-{Stealth},thick,zew] (-0.9,-0.1) -- node[left,align=right,font=\scriptsize]
+          {w dół:\\ kodowanie} (-0.9,-2.8);
+        \draw<3->[-{Stealth},thick,wew] (7.9,-2.8) -- node[right,align=left,font=\scriptsize]
+          {w górę:\\ dekodowanie} (7.9,-0.1);
+      \end{tikzpicture}
+
+      \uncover<5->{\footnotesize Równoważnie: $T(N)=7\,T(N/2)+O(N^2)$.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Koszt dodawań i odejmowań}
+  \begin{itemize}
+    \item Na głębokości $k$ drzewa jest $7^k$ wierzchołków wewnętrznych.
+    \item W każdym z nich, w dół i w górę, liczymy kombinacje liniowe macierzy
+      $2^{L-k}\times2^{L-k}$, czyli $O(4^{L-k})$ operacji.
+  \end{itemize}
+  \pause
+  \[
+    \sum_{k=0}^{L-1}7^k4^{L-k}
+    \;=\;4^L\sum_{k=0}^{L-1}\Big(\tfrac74\Big)^k
+    \;=\;4^L\cdot\frac{(7/4)^L-1}{7/4-1}
+    \;<\;\tfrac43\cdot7^L
+    \;=\;O(7^L).
+  \]
+  \pause
+  Szereg geometryczny jest zdominowany przez ostatni wyraz, więc dodawania zwiększają czas tylko o stały czynnik.
+  \pause
+  \alert{Uwaga:} w nowym algorytmie (2.4) ten argument \emph{przestanie działać}. Dodawania trzeba
+  będzie liczyć staranniej.
+\end{frame}
+
+\begin{frame}{Wnioski: trzy fazy}
+  \centering
+  \begin{tikzpicture}[
+      b/.style={draw,rounded corners,align=center,font=\small,minimum height=1cm,text width=2.5cm},
+      arr/.style={-{Stealth[length=2.5mm]},thick}]
+    \node (A) at (0,0.8) {$A$};
+    \node (B) at (0,-0.8) {$B$};
+    \node[b,fill=tlozew] (kA) at (2.6,0.8) {kodowanie $A$\\ \scriptsize liniowe, tylko z $A$};
+    \node[b,fill=tlozew] (kB) at (2.6,-0.8) {kodowanie $B$\\ \scriptsize liniowe, tylko z $B$};
+    \node[b,fill=red!10,minimum height=2.6cm] (m) at (6.1,0) {mnożenie\\ $7^L$ iloczynów\\ w liściach};
+    \node[b,fill=tlowew,minimum height=2.6cm] (d) at (9.4,0) {dekodowanie\\ \scriptsize liniowe};
+    \node (AB) at (11.6,0) {$AB$};
+    \draw[arr] (A)--(kA); \draw[arr] (B)--(kB);
+    \draw[arr] (kA)--(m.west|-kA); \draw[arr] (kB)--(m.west|-kB);
+    \draw[arr] (m)--(d); \draw[arr] (d)--(AB);
+  \end{tikzpicture}
+  \vspace{0.5em}
+  \begin{itemize}
+    \item<2-> Kodowanie i dekodowanie są \textbf{liniowe}.
+    \item<3-> Kodowanie $A$ \textbf{nie zależy od $B$} (i odwrotnie). Wykorzystamy to w 2.4.1.
+    \item<4-> Tutaj kodowanie i dekodowanie są tańsze niż mnożenia, więc można je zignorować.
+      \alert{W pełnym algorytmie (2.4) już nie!}
+  \end{itemize}
+  \uncover<5->{\idea{Mała tożsamość stosowana rekurencyjnie: mnożenia w liściach, a ich liczba decyduje o koszcie.}}
+\end{frame}
+
+\begin{frame}{Notacja: wielomiany trójliniowe}
+  \begin{itemize}
+    \item Wprowadzamy \emph{zmienne wyjściowe} $c_{11},c_{12},c_{21},c_{22}$, po jednej na każdy wpis $AB$.
+    \item Każde $S_r$ mnożymy przez sumę ze znakami tych $c_{ik}$, w których wzorach $S_r$ występuje.
+      Na przykład $S_1$ jest we wzorach na $(AB)_{11}$ i $(AB)_{22}$, więc dostaje $c_{11}+c_{22}$.
+      $S_5$ jest z minusem w $(AB)_{11}$ i z plusem w $(AB)_{12}$, więc dostaje $c_{12}-c_{11}$.
+  \end{itemize}
+  \pause
+  \[
+    S_1(c_{11}+c_{22})+S_2(c_{21}-c_{22})+S_3(c_{12}+c_{22})+S_4(c_{11}+c_{21})
+    +S_5(c_{12}-c_{11})+S_6c_{22}+S_7c_{11}
+    =\sum_{i,j,k=1}^{2}a_{ij}b_{jk}c_{ik}.
+  \]
+  \pause
+  \begin{itemize}
+    \item Współczynnik przy $c_{ik}$ \textbf{po prawej} to szukane $(AB)_{ik}=a_{i1}b_{1k}+a_{i2}b_{2k}$.
+    \item \textbf{Po lewej} to kombinacja, która go liczy. Dla $c_{11}$ jest to $S_1+S_4-S_5+S_7$.
+    \item<4-> Każdy składnik ma postać
+      $\Zew{\varphi(a)}\cdot\Wew{\psi(b)}\cdot\chi(c)$, czyli (forma liniowa w $a$) $\times$ (forma w $b$) $\times$ (forma w $c$).
+      Jedna tożsamość zapisuje \emph{kodowanie}, \emph{mnożenia} i \emph{dekodowanie} naraz.
+    \item<4-> Wielomian jest \emph{trójliniowy}: liniowy osobno w $a$, w $b$ i w $c$.
+      W literaturze nazywa się go tensorem rzędu~3.
+  \end{itemize}
+\end{frame}

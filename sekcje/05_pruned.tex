@@ -1,0 +1,390 @@
+% ======================================================================
+\section{2.4 Liczymy tylko chciane wpisy}
+% ======================================================================
+
+\begin{frame}{Cel i dwie modyfikacje}
+  Chcemy policzyć tylko wpisy $XY$ na pozycjach z $W$, gdzie $|W|\le N^2/\sqrt D$.
+  Algorytm z 2.3 modyfikujemy na dwa sposoby:
+  \begin{enumerate}
+    \item<2-> \textbf{Współdzielenie kodowania (2.4.1).} Kodowanie (krok (2)) każdej tablicy wejściowej zależy
+      \emph{tylko od niej}, a każda tablica jest wspólna dla wielu kafelków. Liczymy je \textbf{raz} na pas.
+    \item<3-> \textbf{Przycinanie drzewa (2.4.2).} W krokach (3)--(4) pomijamy wywołanie rekurencyjne, jeśli żadne
+      z jego wyjść nie prowadzi do wpisu z $W$.
+  \end{enumerate}
+  \uncover<4->{Potem:
+  \begin{itemize}
+    \item liczymy odwiedzane liście (2.4.3, \textbf{tu jest nowa analiza}),
+    \item sumujemy koszty (2.4.4).
+  \end{itemize}}
+\end{frame}
+
+\begin{frame}{2.4.1 Kodowanie liczymy raz}
+  \begin{itemize}
+    \item Liczby $\Phi_\tau(a)$ i $\Psi_\tau(b)$ mnożone w liściu $\tau$ zależą odpowiednio \textbf{tylko od $a$} i \textbf{tylko od $b$}.
+      Liczymy je więc raz na tablicę wejściową, a nie raz na kafelek.
+    \item<2-> \textbf{Kodowanie} tablicy $a$ to tablica $10^L$ liczb $\Phi_\tau(a)$ indeksowana liśćmi $\tau$.
+    \item<3-> Liczymy ją, uruchamiając $\Full$ bez $b$ i bez kroku (4). Z Lematu 7 lewa liczba w liściu $\tau$ to $\Phi_\tau(a)$,
+      więc liść ją zapisuje. Koszt to $O(10^L)$, czyli koszt kodowania z 2.3.1.
+    \item<3-> Tak samo liczymy kodowanie $b$, czyli liczby $\Psi_\tau(b)$.
+    \item<4-> Liczymy kodowania tablic wejściowych \textbf{wszystkich pasów wierszy i kolumn}: $2N/(K_0N_0)$ tablic po $10^L$ liczb.
+      Każdy kafelek czyta swoje dwa kodowania.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Dlaczego współdzielenie kodowania jest konieczne}
+  \begin{columns}[T]
+    \begin{column}{0.56\textwidth}
+      \begin{itemize}
+        \item Kodowanie ma
+          \[10^L=(9+1)^L>\binom Lm9^{L-m}=M\]
+          liczb (to jeden wyraz rozwinięcia dwumianu), czyli \emph{więcej niż wpisów kafelka}.
+        \item<2-> Kodowanie każdego kafelka osobno kosztowałoby więc więcej niż jedną operację na wpis całego $XY$,
+          i to zanim w ogóle skorzystamy z $W$.
+        \item<3-> Przy współdzieleniu $2N/(K_0N_0)$ kodowań obsługuje wszystkie $(N/(K_0N_0))^2$ kafelków.
+          Każde kosztuje $O(10^L)$, niezależnie od $W$.
+        \item<4-> Założenie $N\ge D^{18}$ czyni ten koszt pomijalnym (policzymy w 2.4.4).
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \centering
+      \begin{tikzpicture}[scale=0.55]
+        \draw[step=1,szary,shift={(1.2,0)}] (0,0) grid (4,4);
+        \draw[very thick] (1.2,0) rectangle (5.2,4);
+        \foreach \i in {1,...,4} {
+          \node[draw,fill=blue!15,font=\tiny,minimum width=0.6cm] (r\i) at (-0.2,{4.5-\i}) {$\Phi(a^{(\i)})$};
+          \node[draw,fill=orange!25,font=\tiny,minimum height=0.6cm,rotate=90] (c\i) at ({0.7+\i},5.4) {$\Psi(b^{(\i)})$};
+        }
+        \only<3->{
+          \fill[blue!12] (1.2,2) rectangle (5.2,3);
+          \fill[orange!20] (3.2,0) rectangle (4.2,4);
+          \fill[red!25] (3.2,2) rectangle (4.2,3);
+          \draw[step=1,szary,shift={(1.2,0)}] (0,0) grid (4,4);
+          \draw[very thick] (1.2,0) rectangle (5.2,4);
+          \draw[-{Stealth},thick,blue!70] (r2.east) -- (1.25,2.5);
+          \draw[-{Stealth},thick,orange!80!black] (3.7,4.35) -- (3.7,3.95);
+          \node[font=\tiny,red!70!black] at (3.7,2.5) {$(2,3)$};
+        }
+        \node[font=\scriptsize,align=center] at (2.4,-1.0) {$a^{(i)}$: lewa tablica pasa wierszy $i$,\\
+          $b^{(j)}$: prawa tablica pasa kolumn $j$.\\ Kafelek $(i,j)$ czyta $\Phi(a^{(i)})$ i $\Psi(b^{(j)})$.};
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{2.4.2 Pomijamy niepotrzebne wywołania}
+  \begin{itemize}
+    \item Po policzeniu kodowań pomijamy tę fazę $\Full$. Każdy liść czyta swoje dwie liczby z kodowań,
+      a każde wywołanie wykonuje już tylko dekodowanie z kroku (4).
+    \item Każdemu wywołaniu przekazujemy zbiór $S$ \textbf{wyjść, których od niego chcemy}, czyli prowadzących do wpisów z $W$.
+    \item Wyjścia wierzchołka $\tau_1\cdots\tau_k$ są indeksowane napisami wyjściowymi długości $L-k$, więc $S$ jest zbiorem takich napisów.
+  \end{itemize}
+  \pause
+  \begin{definicja}
+    Dla zbioru $S$ napisów wyjściowych i zmiennej wyjściowej $z$ \textbf{slice} to
+    \[S_z:=\{w' : zw'\in S\}.\]
+    Tablica na $S$ przypisuje liczbę całkowitą każdemu napisowi z $S$.
+  \end{definicja}
+  \pause
+  Jeśli $U$ to zbiór przekazany korzeniowi (w końcowym algorytmie są to napisy chcianych wpisów kafelka), to w Lemacie 10 zobaczymy, że $S$
+  składa się z sufiksów $w_{k+1}\cdots w_L$ tych napisów $w\in U$, do których wierzchołek wnosi wkład.
+\end{frame}
+
+\begin{frame}{Algorytm $\Pruned$}
+  \begin{block}{$\Pruned_{\tau_1\cdots\tau_k}(S)$ dla zbioru $S$ napisów wyjściowych długości $L-k$; zwraca tablicę wierzchołka $\tau_1\cdots\tau_k$ algorytmu $\Full$ ograniczoną do $S$}
+    \begin{enumerate}
+      \item Jeśli $k=L$: odczytaj $\Phi_\tau(a)$ i $\Psi_\tau(b)$ z policzonych kodowań i zwróć $\Phi_\tau(a)\Psi_\tau(b)$ dla liścia $\tau=\tau_1\cdots\tau_L$.
+      \item Dla każdego składnika $\lambda$ niech $S_\lambda$ będzie sumą slice'ów $S_z$ po $z$, do których $\lambda$ wnosi wkład:
+        \[S_{P_{ij}}:=S_{z_{ij}}\cup S_{z_0},\qquad S_{P_0}:=S_{z_0}.\]
+      \item Dla każdego $\lambda$ z $S_\lambda\neq\emptyset$ policz $C_\lambda:=\Pruned_{\tau_1\cdots\tau_k\lambda}(S_\lambda)$, tablicę na $S_\lambda$.
+      \item Zwróć tablicę $c$ na $S$ o slice'ach $c_{z_{ij}}:=C_{P_{ij}}$ i $c_{z_0}:=\sum_\lambda C_\lambda$,
+        ograniczonych do $S_{z_{ij}}$ i $S_{z_0}$.
+    \end{enumerate}
+  \end{block}
+  \pause
+  \begin{itemize}
+    \item Ograniczenia w (4) mają sens, bo $S_{z_{ij}}\subseteq S_{P_{ij}}$ i $S_{z_0}\subseteq S_\lambda$ dla każdego $\lambda$ (z kroku (2)).
+    \item Różnica względem $\Full$: brak kodowania (jest gotowe) i wywołania tylko dla $S_\lambda\ne\emptyset$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Animacja: $\Pruned$ dla $L=2$, $U=\{z_{13}z_0,\ z_0z_{21}\}$}
+  \centering
+  \begin{tikzpicture}[
+      v/.style={draw,rounded corners=2pt,font=\scriptsize,inner sep=2pt,minimum width=0.95cm,fill=blue!8},
+      s/.style={font=\tiny,text=chciane},
+      lf/.style={draw,circle,inner sep=1.3pt,fill=chciane}]
+    \node[v,fill=red!15] (r) at (6.3,0) {korzeń};
+    \node[s,above=1pt of r] {$S=\{z_{13}z_0,\ z_0z_{21}\}$};
+    \node[font=\scriptsize,align=left,anchor=west,visible on=<2->] at (9.0,0.1)
+      {$S_{z_{13}}=\{z_0\}$, \ $S_{z_0}=\{z_{21}\}$,\\ pozostałe slice'y puste};
+    \foreach \l/\t [count=\i] in {P11/P_{11},P12/P_{12},P13/P_{13},P21/P_{21},P22/P_{22},P23/P_{23},P31/P_{31},P32/P_{32},P33/P_{33},P0/P_0} {
+      \node[v,visible on=<3->] (\l) at ({(\i-1)*1.4},-1.35) {$\t$};
+      \draw[visible on=<3->] (r.south) -- (\l.north);
+    }
+    \node[s,below=1pt of P13,visible on=<3->] {$\{z_0,z_{21}\}$};
+    \foreach \l in {P11,P12,P21,P22,P23,P31,P32,P33,P0}
+      \node[s,below=1pt of \l,visible on=<3->] {$\{z_{21}\}$};
+    % poziom 2
+    \foreach \l in {P11,P12,P21,P22,P23,P31,P32,P33,P0} {
+      \node[lf,visible on=<4->] (L\l) at ($(\l)+(0,-1.35)$) {};
+      \draw[visible on=<4->] ($(\l.south)+(0,-0.3)$) -- (L\l);
+      \node[font=\tiny,below=1pt of L\l,visible on=<4->] {$P_{21}$};
+    }
+    \foreach \k in {1,...,10} {
+      \node[lf,visible on=<5->] (Q\k) at ({2.8+(\k-5.5)*0.2},-3.0) {};
+      \draw[visible on=<5->] ($(P13.south)+(0,-0.3)$) -- (Q\k);
+    }
+    \node[font=\tiny,align=center,visible on=<5->] at (2.8,-3.4) {wszystkie 10};
+  \end{tikzpicture}
+
+  \begin{itemize}\footnotesize
+    \item<3-> Krok (2): $S_{P_{13}}=S_{z_{13}}\cup S_{z_0}=\{z_0,z_{21}\}$, a dla $\lambda\ne P_{13}$: $S_\lambda=S_{z_0}=\{z_{21}\}$.
+      Wywołujemy wszystkie 10 dzieci.
+    \item<4-> Pod $\lambda\ne P_{13}$ jest $S=\{z_{21}\}$: niepuste jest tylko $S_{P_{21}}=\{\pusty\}$ ($\pusty$ to pusty napis). Jeden liść $\lambda P_{21}$.
+    \item<5-> Pod $P_{13}$ jest $S=\{z_0,z_{21}\}$: $S_{z_0}=\{\pusty\}$, więc wszystkie 10 liści $P_{13}\lambda$.
+    \item<6-> \alert{Odwiedzonych liści: $10+9=19$ ze $100$.} Rzeczywiście: do $z_{13}z_0$ wnosi wkład 10 liści, do $z_0z_{21}$
+      też 10, a wspólny jest jeden ($P_{13}P_{21}$). Łączny rozmiar zbiorów: $2+11+19=32\le(L+1)\cdot19$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Lemat 10: $\Pruned$ jest poprawny i odwiedza tylko potrzebne liście}
+  Przypomnienie (2): $\Mult(a,b)[w]$ to suma $\Phi_\tau(a)\Psi_\tau(b)$ po liściach wnoszących wkład do $w$, czyli wybierających
+  $P_{ij}$ na każdym poziomie, gdzie $w$ ma $z_{ij}$, i dowolny składnik tam, gdzie $w$ ma $z_0$.
+  \begin{definicja}
+    Dla zbioru $U$ napisów wyjściowych długości $L$, $\Leaves(U)$ to zbiór liści wnoszących wkład do \emph{jakiegoś} napisu z $U$.
+  \end{definicja}
+  \pause
+  \begin{lemat}{10}
+    Niech $a$ i $b$ będą tablicami wejściowymi, a $U$ zbiorem napisów wyjściowych długości $L$. Wywołany w korzeniu,
+    $\Pruned(U)$ zwraca $\Mult(a,b)$ ograniczone do $U$. Odwiedza dokładnie liście z $\Leaves(U)$, a zbiory
+    przekazywane do jego wywołań mają łączny rozmiar co najwyżej $(L+1)\,|\Leaves(U)|$.
+  \end{lemat}
+\end{frame}
+
+\begin{frame}{Dowód Lematu 10}
+  \begin{proof}\small
+    \textbf{Wartości:} indukcja po $L-k$. Każde $C_\lambda$ to tablica odpowiedniego dziecka w $\Full$ ograniczona do $S_\lambda$,
+    więc krok (4) to krok (4) algorytmu $\Full$ ograniczony do $S$.
+
+    \uncover<2->{\textbf{Odwiedzane liście:} $S_\lambda$ składa się z ostatnich $L-k-1$ zmiennych tych napisów z $S$, do których
+    \emph{pierwszej} zmiennej $\lambda$ wnosi wkład. Indukcja po $k$ pokazuje, że zbiór przekazany wierzchołkowi $\tau_1\cdots\tau_k$
+    to sufiksy $w_{k+1}\cdots w_L$ napisów $w\in U$, do których ten wierzchołek wnosi wkład, i że wierzchołek jest wywołany
+    \emph{wtedy i tylko wtedy}, gdy ten zbiór jest niepusty. Zatem liść jest odwiedzony $\iff$ wnosi wkład do jakiegoś napisu z $U$.}
+
+    \uncover<3->{\textbf{Łączny rozmiar:} każdemu sufiksowi w zbiorze wierzchołka $\tau_1\cdots\tau_k$ przypisujemy liść,
+    który przedłuża $\tau_1\cdots\tau_k$, wybierając $P_{ij}$ tam, gdzie sufiks ma $z_{ij}$, i $P_0$ tam, gdzie ma $z_0$.
+    Wierzchołek wnosi wkład do pewnego $w\in U$ z tym sufiksem, a wtedy ten liść także, więc liść należy do $\Leaves(U)$.}
+    \uncover<4->{Liść wyznacza wierzchołek (prefiks długości $k$) i sufiks (odczytany z jego składników). Zbiory na każdej
+    z $L+1$ głębokości mają więc łączny rozmiar co najwyżej $|\Leaves(U)|$.}
+  \end{proof}
+  \uncover<5->{\idea{Każde wywołanie jest wykonane \textbf{co najwyżej raz}, niezależnie od tego, ile napisów z $U$ z niego korzysta.
+    Czas zależy od \textbf{rozmiaru sumy} zbiorów liści, a nie od sumy ich rozmiarów. Trzeba oszacować tę sumę.}}
+\end{frame}
+
+% ----------------------------------------------------------------------
+\subsection{2.4.3 Liczenie liści}
+
+\begin{frame}{2.4.3 Ile liści wnosi wkład do jednego napisu?}
+  Od teraz $U$ zawiera tylko napisy wyjściowe długości $L$ o zbiorze wewnętrznym rozmiaru dokładnie $m$
+  (wskazują wpisy $X_QY_Q$, Lemat 9). Jest ich
+  \[M=\binom Lm9^{L-m}=KN_0^2.\]
+  \pause
+  \begin{itemize}
+    \item Do jednego napisu o zbiorze wewnętrznym $Q$ wnosi wkład $10^m=D^{\log_410}\approx D^{1.66}$ liści: dowolny składnik na każdym z $m$ poziomów $Q$
+      i $P_{ij}$ na każdym poziomie poza $Q$.
+    \item<3-> To \alert{więcej niż $D$} mnożeń potrzebnych do policzenia wpisu wprost jako iloczynu skalarnego!
+    \item<4-> Dlatego \textbf{nie} wolno liczyć liści każdego napisu osobno. Większość liści napisu wnosi wkład
+      także do wielu innych napisów, a takich liści jest łącznie niewiele.
+  \end{itemize}
+  \uncover<5->{
+  \begin{definicja}
+    \textbf{Prywatny liść} napisu wyjściowego to ten z jego liści, który wybiera $P_0$ na każdym poziomie $Q$.
+  \end{definicja}
+  Nie wnosi on wkładu do żadnego innego napisu. Napis o innym zbiorze wewnętrznym wymaga składnika $\ne P_0$ na jakimś
+  poziomie $Q$. Napis o tym samym $Q$, ale innej części zewnętrznej (inne $z_{ij}$ na jakimś poziomie poza $Q$), wymaga tam innego składnika.}
+\end{frame}
+
+\begin{frame}{Rząd liścia oraz liczby $\alpha_d$, $\beta_d$}
+  \begin{definicja}
+    \textbf{Rząd} liścia to $m$ minus liczba poziomów, na których wybiera on $P_0$.
+  \end{definicja}
+  \begin{itemize}
+    \item Liść wnoszący wkład do napisu wybiera $P_0$ tylko na poziomach zbioru wewnętrznego napisu, więc jego rząd jest $\ge0$.
+      Rząd to liczba poziomów $Q$, na których liść wybiera któryś z $P_{ij}$, współdzielonych z iloczynem zewnętrznym.
+    \item Jedynym liściem rzędu $0$ wnoszącym wkład do napisu jest jego prywatny liść.
+  \end{itemize}
+  \pause
+  \[
+    \alpha_d:=\binom md9^d\qquad\text{liści rzędu $d$ wnosi wkład do \emph{jednego} napisu}
+  \]
+  (prywatny liść, w którym na $d$ poziomach $Q$ zamieniamy $P_0$ na jeden z 9 składników $P_{ij}$).
+  \pause
+  \[
+    \beta_d:=\binom L{m-d}9^{L-m+d}\qquad\text{liści rzędu $d$ jest w \emph{całym} drzewie}
+  \]
+  (wybieramy $m-d$ poziomów z $P_0$ i jeden z 9 pozostałych składników na każdym innym poziomie).
+  W szczególności $\beta_0=\binom Lm9^{L-m}=M$, bo liście rzędu 0 to dokładnie prywatne liście, po jednym na napis.
+\end{frame}
+
+\begin{frame}{Podwójne zliczanie}
+  \begin{itemize}
+    \item Liść rzędu $d$ wnosi wkład do $\binom{L-m+d}{d}$ napisów, po jednym na każdy zbiór wewnętrzny rozmiaru $m$
+      zawierający $m-d$ poziomów, na których liść wybiera $P_0$. (Dobieramy $d$ z $L-(m-d)$ pozostałych poziomów; część zewnętrzna
+      wynika z $P_{ij}$ liścia.)
+    \item<2-> Liczymy pary (napis, liść rzędu $d$ wnoszący do niego wkład) na dwa sposoby:
+      \[
+        M\cdot\alpha_d=\beta_d\cdot\binom{L-m+d}{d}.
+      \]
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Przykład: liście jednego napisu ($L=6$, $m=2$)}
+  Napis $w=z_{13}\,\Wew{z_0}\,z_{21}\,z_{33}\,\Wew{z_0}\,z_{12}$, \ $Q=\{2,5\}$. Liść to napis składników wybranych na kolejnych poziomach.
+  \vspace{0.4em}
+  \centering
+  \begin{tikzpicture}[c/.style={draw,minimum width=0.85cm,minimum height=0.5cm,font=\scriptsize}]
+    \foreach \row/\vals/\lab in {
+      0/{P_{13},P_0,P_{21},P_{33},P_0,P_{12}}/{rząd 0: prywatny liść, $\alpha_0=1$, wnosi wkład do 1 napisu},
+      -0.85/{P_{13},P_{ij},P_{21},P_{33},P_0,P_{12}}/{},
+      -1.45/{P_{13},P_0,P_{21},P_{33},P_{ij},P_{12}}/{rząd 1: $\alpha_1=\binom21\cdot9=18$ liści, każdy wnosi wkład do $\binom51=5$ napisów},
+      -2.3/{P_{13},P_{ij},P_{21},P_{33},P_{ij},P_{12}}/{rząd 2: $\alpha_2=\binom22\cdot81=81$ liści, każdy wnosi wkład do $\binom62=15$ napisów}} {
+      \foreach \v [count=\i] in \vals {
+        \ifnum\i=2 \node[c,fill=tlowew] at (\i*0.85,\row) {$\v$};
+        \else\ifnum\i=5 \node[c,fill=tlowew] at (\i*0.85,\row) {$\v$};
+        \else \node[c] at (\i*0.85,\row) {$\v$};\fi\fi
+      }
+      \node[anchor=west,font=\scriptsize] at (5.6,\row) {\lab};
+    }
+  \end{tikzpicture}
+  \vspace{0.4em}
+  \begin{itemize}
+    \item Liście wyższego rzędu: \textbf{więcej na napis} ($\alpha_d$ rośnie), ale każdy \textbf{współdzielony przez więcej napisów}.
+    \item<2-> Przy $L=19m$ jest ich \textbf{mniej w sumie} (nierówność (5) na następnym slajdzie).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Nierówność (5): liści wysokiego rzędu jest geometrycznie mniej}
+  \[
+    \frac{\beta_d}{\beta_{d-1}}
+    =\frac{\binom{L}{m-d}}{\binom{L}{m-d+1}}\cdot9
+    =\frac{9(m-d+1)}{L-m+d}.
+  \]
+  \pause
+  Dla $L=19m$ i $1\le d\le m$: licznik $\le9m$, mianownik $=18m+d\ge18m+1$, więc
+  \[
+    \frac{\beta_d}{\beta_{d-1}}=\frac{9(m-d+1)}{L-m+d}\le\frac{9m}{18m+1}<\frac12,
+    \qquad\text{zatem}\qquad \beta_d\le2^{-d}M.\tag{5}
+  \]
+  \pause
+  \begin{itemize}
+    \item Liczymy \textbf{wszystkie} liście rzędu $d>m/9$, niezależnie od tego, czy wnoszą wkład do napisu z $U$.
+      To tanie, bo $\beta_d$ maleją geometrycznie.
+    \item<4-> To wymaga $m$ \textbf{dużo poniżej} $L/10$. Przy $m\approx L/10$ (wybór, przy którym całe $XY$ liczy się tanio, 2.3.4)
+      iloraz byłby bliski 1 dla małych $d$, więc $\beta_d\approx M$ i nie byłoby oszczędności.
+    \item<5-> Małe $m$ sprawia też, że $D=4^m$ jest małe względem $N_0=3^{18m}$ (około $N_0^{0.07}$). Kafelek musi mieścić się w iloczynie,
+      więc $N$ musi być dużą potęgą $D$. Razem z kosztem kodowań to jest powód założenia \alert{$N\ge D^{18}$}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Lemat 11: mało liści wnosi wkład do rzadkiego zbioru wpisów}
+  Od teraz ustalamy $L=19m$, więc
+  \[
+    N_0=3^{18m},\qquad K=\binom{19m}{m},\qquad D=4^m,\qquad 2^m=\sqrt D,\qquad 2^{-m/9}=D^{-1/18}.
+  \]
+  \begin{lemat}{11}
+    Dla każdego zbioru $U$ napisów wyjściowych, których zbiory wewnętrzne mają dokładnie $m$ elementów,
+    \[
+      |\Leaves(U)|\le\sum_{d=0}^{m}\min\{|U|\alpha_d,\ \beta_d\},
+    \]
+    a jeśli $L=19m$, to
+    \[
+      |\Leaves(U)|\le2^{-m/9}\big(2^m|U|+2M\big).
+    \]
+  \end{lemat}
+\end{frame}
+
+\begin{frame}{Dowód Lematu 11: pierwsza nierówność}
+  \begin{proof}[Dowód (1/2)]
+    Liczbę liści rzędu $d$ w $\Leaves(U)$ szacujemy na dwa sposoby:
+    \begin{itemize}
+      \item przez $|U|\alpha_d$: każdy napis z $U$ „płaci” za swoje liście rzędu $d$;
+      \item przez $\beta_d$: liczbę \emph{wszystkich} liści rzędu $d$.
+    \end{itemize}
+    Każdy liść z $\Leaves(U)$ ma rząd $0\le d\le m$, więc sumując mniejsze z dwóch oszacowań po $d$, dostajemy pierwszą nierówność.
+  \end{proof}
+  \pause
+  \textbf{Interpretacja} (każde z oszacowań osobno):
+  \begin{itemize}
+    \item $\sum_d|U|\alpha_d=|U|\sum_d\binom md9^d=|U|\cdot10^m$, czyli koszt liczenia każdego napisu z $U$ osobno;
+    \item $\sum_d\beta_d<2M$ z (5), czyli koszt policzenia wszystkich $M$ napisów.
+    \item Ani $|U|\alpha_d$, ani $\beta_d$ nie zależą od tego, \emph{które} napisy są w $U$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Dowód Lematu 11: druga nierówność ($L=19m$)}
+  \begin{proof}[Dowód (2/2)]
+    Dla rzędów $d\le m/9$ używamy $|U|\alpha_d$, a dla $d>m/9$ używamy $\beta_d$.
+
+    \uncover<2->{\textbf{Rzędy $d>m/9$.} Niech $d_0$ będzie najmniejszą liczbą całkowitą $>m/9$. Z (5):
+    \[
+      \sum_{d>m/9}\beta_d\le M\sum_{d\ge d_0}2^{-d}=2\cdot2^{-d_0}M<2\cdot2^{-m/9}M.
+    \]}
+    \uncover<3->{\textbf{Rzędy $d\le m/9$.} Dają co najwyżej $|U|\sum_{d\le m/9}\binom md9^d$. Ponieważ
+    $9^d=72^d\,8^{-d}\le72^{m/9}\,8^{-d}$ dla $d\le m/9$,
+    \[
+      \sum_{d\le m/9}\binom md9^d\le72^{m/9}\sum_{d=0}^{m}\binom md8^{-d}
+      =72^{m/9}\Big(\frac98\Big)^m=\Big(72\cdot\Big(\frac98\Big)^9\Big)^{m/9}<256^{m/9}=2^m\cdot2^{-m/9},
+    \]
+    bo $72\cdot(9/8)^9\approx207{,}83<208<256$.}
+
+    \uncover<4->{Dodając obie części: $|\Leaves(U)|\le2^{-m/9}\big(2^m|U|+2M\big)$.}
+  \end{proof}
+\end{frame}
+
+\begin{frame}{Rysunek 7: oszacowanie z Lematu 11 (schematycznie)}
+  \centering
+  \begin{tikzpicture}[x=0.9cm,y=0.9cm]
+    % schemat jak Rysunek 7 w pracy: m/9 w x=4, m w x=8; pionowo skala logarytmiczna
+    \fill[blue!15,visible on=<2->] (0,0) -- (0,1.3) -- (4,2.7) -- (4,0) -- cycle;
+    \fill[red!15,visible on=<3->] (4,0) -- (4,2.15) -- (8,0.6) -- (8,0) -- cycle;
+    \draw[->] (0,0) -- (8.6,0) node[right,font=\small] {rząd $d$};
+    \draw[->] (0,0) -- (0,4.4) node[above,font=\small] {liczba liści (skala log.)};
+    \draw[blue!80!black,thick] (0,1.3) -- (8,4.1) node[right,font=\small] {$|U|\,\alpha_d$};
+    \draw[red!80!black,thick] (0,3.7) -- (8,0.6) node[right,font=\small] {$\beta_d\le2^{-d}M$};
+    \node[left,font=\small] at (0,3.7) {$M$};
+    \node[left,font=\small] at (0,1.3) {$|U|$};
+    \draw[dashed,visible on=<2->] (4,0) -- (4,2.7);
+    \node[below,font=\small] at (4,0) {$m/9$};
+    \node[below,font=\small] at (8,0) {$m$};
+    \node[align=center,font=\scriptsize,visible on=<2->] at (2,0.75) {małe rzędy:\\ płaci każdy\\ napis z $U$};
+    \node[align=center,font=\scriptsize,visible on=<3->] at (6,0.55) {duże rzędy:\\ bierzemy wszystkie liście};
+  \end{tikzpicture}
+
+  \vspace{0.4em}
+  \begin{itemize}\small
+    \item Liści rzędu $d$ w $\Leaves(U)$ jest co najwyżej $\min\{|U|\alpha_d,\beta_d\}$.
+      $|U|\alpha_d$ rośnie z $d$ aż do $d\approx0{,}9m$ (do każdego napisu wnosi wkład więcej liści wyższego rzędu),
+      a $\beta_d$ maleje geometrycznie (liści wyższego rzędu jest mniej).
+    \item<2-> Dowód dzieli sumę w $d=m/9$, co nie musi być punktem przecięcia obu oszacowań.
+    \item<3-> Całość szacujemy przez zacieniowane pole.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Co mówi Lemat 11 dla gęstości z Twierdzenia 5}
+  Ponieważ $2^m=\sqrt D$ i $2^{-m/9}=D^{-1/18}$, druga nierówność to
+  \[
+    |\Leaves(U)|\le D^{-1/18}\big(\sqrt D\,|U|+2M\big).
+  \]
+  \pause
+  Weźmy kafelek, w którym chcemy $|U|=M/\sqrt D$ wpisów (gęstość z Twierdzenia 5: $N^2/\sqrt D$ z $N^2$). Wtedy $\sqrt D|U|=M$ i
+  \[
+    |\Leaves(U)|\le D^{-1/18}\cdot3M=O\big(M/D^{1/18}\big).
+  \]
+  \pause
+  \begin{itemize}
+    \item To o czynnik $D^{1/18}$ \textbf{mniej niż $M$} wpisów kafelka.
+    \item I dużo mniej niż $|U|\cdot D=M\sqrt D$ mnożeń przy liczeniu każdego chcianego wpisu wprost.
+    \item<4-> Oszacowanie jest \textbf{liniowe w $|U|$}, więc po zsumowaniu po kafelkach wynik nie zależy od tego, jak chciane wpisy
+      rozkładają się na kafelki.
+  \end{itemize}
+\end{frame}

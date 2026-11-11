@@ -1,0 +1,17 @@
+% ======================================================================
+\section{Podsumowanie}
+% ======================================================================
+
+\begin{frame}{Kluczowe idee}
+  \begin{enumerate}
+    \item<1-> \textbf{Rekurencja à la Strassen} z tożsamością Schönhagego (10 mnożeń zamiast 13):
+      $L$ poziomów daje naraz $\binom Lm$ cienkich iloczynów $N_0\times D\times N_0$.
+    \item<2-> \textbf{Błąd $E$ ginie}, bo jego jednomiany mieszają zmienne wewnętrzne z zewnętrznymi (Lemat 9).
+    \item<3-> \textbf{Kafelkowanie siatką}: każdy wpis $XY$ to jedno wyjście jednego $\Full$, a tablica wejściowa zależy tylko od pasa.
+    \item<4-> \textbf{Kodowanie raz na pas}: kodowanie zależy tylko od $X$ albo tylko od $Y$, a $N\ge D^{18}$ czyni je pomijalnym.
+    \item<5-> \textbf{Przycinanie}: odwiedzamy tylko $\Leaves(U)$. Każde wywołanie raz, $O(L^2)$ na liść (Lemat 10).
+    \item<6-> \textbf{Liczenie liści według rzędu}: prywatne liście ($d=0$) plus liście współdzielone.
+      Małe rzędy liczymy na napis, a duże globalnie ($\beta_d$ maleje geometrycznie przy $L=19m$).
+      Stąd $O(M/D^{1/18})$ liści na kafelek przy gęstości $1/\sqrt D$.
+  \end{enumerate}
+\end{frame}

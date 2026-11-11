@@ -1,0 +1,576 @@
+% ======================================================================
+\section{2.3 Mnożenie prostokątne tożsamością Schönhagego (Coppersmith)}
+% ======================================================================
+
+\begin{frame}{Idea: $L$ poziomów rekursji daje $2^L$ iloczynów}
+  \begin{itemize}
+    \item Tożsamość Schönhagego liczy dwa iloczyny na rozłącznych zmiennych:
+      \Zew{zewnętrzny} (kształt $3\times1$ razy $1\times3$) i \Wew{skalarny} ($1\times4$ razy $4\times1$).
+    \item Stosowana rekurencyjnie na $L$ poziomach daje $2^L$ iloczynów macierzy, po jednym na każdy wybór
+      \Zew{zewnętrzny}/\Wew{skalarny} na każdym poziomie.
+    \item<2-> Poziom \Zew{zewnętrzny} mnoży liczbę wierszy i kolumn wyniku przez $3$. Poziom \Wew{skalarny}
+      mnoży wymiar wewnętrzny (długość sum) przez $4$.
+    \item<3-> Wybór skalarnego na $m$ poziomach i zewnętrznego na pozostałych $L-m$ daje iloczyn macierzy
+      \[3^{L-m}\times4^m\quad\text{przez}\quad4^m\times3^{L-m}.\]
+      Interesuje nas $m$ \textbf{dużo mniejsze} od $L$, czyli cienkie iloczyny.
+  \end{itemize}
+  \uncover<4->{\footnotesize
+  \begin{przyklad}[$L=2$]
+    \centering
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{cccc}
+      \Zew{zewn.}, \Zew{zewn.} & \Zew{zewn.}, \Wew{skal.} & \Wew{skal.}, \Zew{zewn.} & \Wew{skal.}, \Wew{skal.}\\
+      $9\times1$ razy $1\times9$ & $3\times4$ razy $4\times3$ & $3\times4$ razy $4\times3$ & $1\times16$ razy $16\times1$\\
+      ($m=0$) & ($m=1$) & ($m=1$) & ($m=2$)
+    \end{tabular}
+  \end{przyklad}}
+\end{frame}
+
+\begin{frame}{Notacja: napisy i tablice}
+  \small
+  \begin{definicja}
+    \begin{itemize}
+      \item \textbf{Lewy napis} długości $L$ to ciąg $u=u_1u_2\cdots u_L$ złożony z $L$ zmiennych lewych.
+        $u_\ell$ to jego zmienna na \textbf{poziomie} $\ell$.
+      \item \textbf{Tablica} $a$ na lewych napisach długości $L$ przypisuje każdemu takiemu $u$ liczbę
+        całkowitą $a[u]$. Ma ona $7^L$ wpisów.
+      \item Tak samo definiujemy napisy i tablice \textbf{prawe} ($7^L$ wpisów) i \textbf{wyjściowe} ($10^L$ wpisów).
+    \end{itemize}
+  \end{definicja}
+  \pause
+  \begin{definicja}
+    Dla składnika $\lambda$ i zmiennej lewej $s$ niech $\varphi_\lambda(s)\in\{0,\pm1\}$ oznacza współczynnik
+    przy $s$ w $\varphi_\lambda$. Analogicznie $\psi_\lambda(t)$ dla zmiennej prawej $t$.
+  \end{definicja}
+\end{frame}
+
+\begin{frame}{Slice: odpowiednik bloków macierzy}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \begin{definicja}
+        Dla tablicy $a$ na napisach długości $L\ge1$ i zmiennej lewej $s$ \textbf{slice} $a_s$ to tablica
+        na napisach długości $L-1$:
+        \[a_s[u']:=a[su'].\]
+      \end{definicja}
+      \begin{itemize}
+        \item $a$ składa się z \textbf{siedmiu} slice'ów, tak jak macierz blokowa składa się z bloków.
+        \item Analogicznie slice'y $b_t$ tablicy prawej i $c_z$ tablicy wyjściowej (\textbf{dziesięć}
+          slice'ów).
+        \item Slice wybieramy według zmiennej na \textbf{poziomie 1}.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.43\textwidth}
+      \centering
+      \begin{tikzpicture}[scale=0.36]
+        \foreach \s [count=\i] in {x_1,x_2,x_3,p_{11},p_{12},p_{21},p_{22}} {
+          \node[font=\tiny,anchor=east] at (0,{7.5-\i}) {$\s$};
+          \node[font=\tiny,rotate=90,anchor=west] at ({\i-0.5},7.1) {$\s$};
+        }
+        \draw[step=1,szary] (0,0) grid (7,7);
+        \only<2->{\fill[blue!25] (0,5) rectangle (7,6); \draw[thick,zew] (0,5) rectangle (7,6);
+          \node[zew,font=\scriptsize,anchor=west] at (7.1,5.5) {slice $a_{x_2}$};}
+        \draw[thick] (0,0) rectangle (7,7);
+        \node[font=\scriptsize] at (3.5,-0.6) {$u_2$ (poziom 2)};
+        \node[font=\scriptsize,rotate=90] at (-2.1,3.5) {$u_1$ (poziom 1)};
+        \node[font=\scriptsize,align=center] at (3.5,-2.1) {tablica $a$ dla $L=2$: $7^2=49$ wpisów};
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Algorytm $\Full(a,b)$}
+  \begin{block}{$\Full(a,b)$ dla tablic $a,b$ na lewych i prawych napisach długości $L$; zwraca tablicę na wyjściowych napisach długości $L$}\small
+    \begin{enumerate}
+      \item Jeśli $L=0$, zwróć liczbę $ab$.
+      \item \textbf{(kodowanie)} Dla każdego składnika $\lambda$ utwórz
+        \[A_\lambda:=\sum_s\varphi_\lambda(s)\,a_s,\qquad B_\lambda:=\sum_t\psi_\lambda(t)\,b_t.\]
+      \item \textbf{(rekurencja)} Dla każdego $\lambda$ policz rekurencyjnie $C_\lambda:=\Full(A_\lambda,B_\lambda)$.
+      \item \textbf{(dekodowanie)} Zwróć tablicę $c$ o slice'ach
+        \[c_{z_{ij}}:=C_{P_{ij}},\qquad c_{z_0}:=\sum_\lambda C_\lambda.\]
+    \end{enumerate}
+  \end{block}
+  \pause
+  \begin{itemize}\small
+    \item Dla $L=1$ jest to dokładnie jedno zastosowanie tożsamości Schönhagego: krok (2) liczy formy
+      $\varphi_\lambda$, $\psi_\lambda$, krok (3) mnoży, a krok (4) sumuje według $\chi_\lambda$.
+    \item Krok (4) to $\chi_\lambda$: do $z_{ij}$ wnosi wkład tylko $P_{ij}$, a do $z_0$ wszystkie.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Jeden poziom rekursji}
+  \centering
+  \begin{tikzpicture}[
+      sl/.style={draw,fill=blue!10,font=\scriptsize,minimum width=0.95cm,minimum height=0.5cm,inner sep=1pt},
+      en/.style={draw,fill=blue!20,font=\scriptsize,minimum width=0.95cm,minimum height=0.5cm,inner sep=1pt},
+      re/.style={draw,fill=orange!20,font=\scriptsize,minimum width=0.95cm,minimum height=0.5cm,inner sep=1pt},
+      de/.style={draw,fill=green!15,font=\scriptsize,minimum width=0.95cm,minimum height=0.5cm,inner sep=1pt},
+      lab/.style={font=\scriptsize,align=right,anchor=east}]
+    \foreach \s/\t [count=\i] in {x1/x_1,x2/x_2,x3/x_3,p11/p_{11},p12/p_{12},p21/p_{21},p22/p_{22}}
+      \node[sl] (a\s) at ({1.7+(\i-1)*1.25},3.7) {$a_{\t}$};
+    \node[font=\scriptsize] at (5.45,4.25) {tablica $a$ pocięta na 7 slice'ów $a_s$ według zmiennej $s$ na poziomie 1};
+    \foreach \l/\t [count=\i] in {P11/P_{11},P12/P_{12},P13/P_{13},P21/P_{21},P22/P_{22},P23/P_{23},P31/P_{31},P32/P_{32},P33/P_{33},P0/P_0} {
+      \node[en,visible on=<2->] (A\l) at ({(\i-1)*1.2},2.35) {$A_{\t}$};
+      \node[re,visible on=<3->] (C\l) at ({(\i-1)*1.2},1.15) {$C_{\t}$};
+      \draw[visible on=<3->] (A\l) -- (C\l);
+    }
+    \foreach \z/\t [count=\i] in {11/z_{11},12/z_{12},13/z_{13},21/z_{21},22/z_{22},23/z_{23},31/z_{31},32/z_{32},33/z_{33},0/z_0}
+      \node[de,visible on=<4->] (c\z) at ({(\i-1)*1.2},0) {$c_{\t}$};
+    % kodowanie: + linia ciągła, - przerywana
+    \begin{scope}[visible on=<2->]
+      \foreach \l/\s in {P11/x1,P11/p11,P12/x1,P12/p12,P13/x1,P21/x2,P21/p21,P22/x2,P22/p22,P23/x2,P31/x3,P32/x3,P33/x3}
+        \draw[szary] (a\s.south) -- (A\l.north);
+      \foreach \l/\s in {P31/p11,P31/p21,P32/p12,P32/p22,P0/x1,P0/x2,P0/x3}
+        \draw[red,dashed] (a\s.south) -- (A\l.north);
+    \end{scope}
+    \begin{scope}[visible on=<4->]
+      \foreach \z in {11,12,13,21,22,23,31,32,33} {
+        \draw (CP\z) -- (c\z);
+        \draw[szary] (CP\z.south) -- (c0.north);
+      }
+      \draw (CP0) -- (c0);
+    \end{scope}
+    \node[lab,visible on=<2->] at (-0.7,2.35) {krok (2):\\ kodowanie};
+    \node[lab,visible on=<3->] at (-0.7,1.15) {krok (3):\\ rekurencja};
+    \node[lab,visible on=<4->] at (-0.7,0) {krok (4):\\ dekodowanie};
+  \end{tikzpicture}
+  \vspace{0.3em}
+  \begin{itemize}\footnotesize
+    \item<2-> Każdy $A_\lambda$ łączy co najwyżej 3 slice'y (linia ciągła: $+$, przerywana: $-$), np.
+      $A_{P_{31}}=a_{x_3}-a_{p_{11}}-a_{p_{21}}$, \ $A_{P_0}=-a_{x_1}-a_{x_2}-a_{x_3}$. To samo robimy z $b$ i $\psi_\lambda$.
+    \item<3-> Dziesięć par mnożymy wywołaniami rekurencyjnymi $C_\lambda=\Full(A_\lambda,B_\lambda)$.
+    \item<4-> $c_{z_{ij}}=C_{P_{ij}}$, a $c_{z_0}$ to suma wszystkich dziesięciu, bo każdy składnik wnosi wkład do $z_0$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Drzewo rekursji $\Full$}
+  \begin{itemize}
+    \item Wywołanie osiągnięte przez wybór składników $\tau_1,\dots,\tau_k$ na poziomach $1,\dots,k$ nazywamy
+      \textbf{wierzchołkiem} $\tau_1\cdots\tau_k$ (napis $k$ składników). Leży on na głębokości $k$,
+      a jego tablice wejściowe są na napisach długości $L-k$.
+    \item Korzeń ma $k=0$. \textbf{Liście} $\tau=\tau_1\cdots\tau_L$ (głębokość $L$) to $10^L$ mnożeń z kroku (1).
+  \end{itemize}
+  \centering
+  \begin{tikzpicture}[v/.style={draw,rounded corners=2pt,fill=blue!8,font=\scriptsize,inner sep=2pt},
+      lf/.style={draw,circle,fill=orange!40,inner sep=1.2pt}]
+    \node[v] (r) at (5.4,0) {korzeń ($k=0$)};
+    \foreach \t [count=\i] in {P_{11},P_{12},P_{13},P_{21},P_{22},P_{23},P_{31},P_{32},P_{33},P_0} {
+      \node[v] (c\i) at ({(\i-1)*1.2},-1.2) {$\t$};
+      \draw (r.south) -- (c\i.north);
+    }
+    \foreach \t [count=\j] in {P_{11},P_{12},P_{13},P_{21},P_{22},P_{23},P_{31},P_{32},P_{33},P_0}
+      \draw[szary] (c3.south) -- ({2.4+(\j-5.5)*0.6},-2.2) node[below,font=\tiny,text=black] {$\t$};
+    \node[font=\scriptsize,anchor=west] at (6.2,-2.4) {np.\ wierzchołek $P_{13}P_{21}$ ($k=2$)};
+    \node[font=\scriptsize] at (5.4,-3.1) {$\vdots$\quad głębokość $L$: $10^L$ liści $\tau_1\cdots\tau_L$};
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Koszt $\Full$}
+  \textbf{Koszt.} Na głębokości $k$ jest $10^k$ wierzchołków. Każdy ma dwie tablice wejściowe po $7^{L-k}$
+  wpisów i tablicę wyjściową z $10^{L-k}$ wpisami. Krok (2) kosztuje $O(7^{L-k})$ (dziesięć kombinacji co najwyżej
+  trzech slice'ów po $7^{L-k-1}$ wpisów), a krok (4) $O(10^{L-k})$:
+  \pause
+  \[
+    \sum_{k=0}^{L}10^k\cdot O\big(7^{L-k}+10^{L-k}\big)=O(L\cdot10^L).
+  \]
+  \pause
+  \begin{itemize}
+    \item Kodowanie: $\displaystyle\sum_{k=0}^{L}10^k7^{L-k}=10^L\sum_{k=0}^{L}\big(\tfrac{7}{10}\big)^{L-k}
+      <\tfrac{10}{3}\cdot10^L=O(10^L)$.
+    \item Dekodowanie: $\displaystyle\sum_{k=0}^{L}10^k10^{L-k}=(L+1)\,10^L$. To ono dominuje.
+  \end{itemize}
+  \uncover<4->{\idea{$\Full$ kosztuje niewiele więcej niż $10^L$ mnożeń w liściach: kodowanie $O(10^L)$, dekodowanie $O(L\cdot 10^L)$.}}
+\end{frame}
+
+\begin{frame}{Co dokładnie liczy $\Full$? Rozwinięcie rekurencji}
+  \begin{definicja}
+    Dla liścia $\tau$:
+    \[
+      \Phi_\tau(a):=\sum_u a[u]\prod_{\ell=1}^{L}\varphi_{\tau_\ell}(u_\ell),\qquad
+      \Psi_\tau(b):=\sum_v b[v]\prod_{\ell=1}^{L}\psi_{\tau_\ell}(v_\ell),
+    \]
+    sumy po wszystkich lewych napisach $u$ i prawych napisach $v$ długości $L$.
+  \end{definicja}
+  \pause
+  \begin{itemize}
+    \item $\Phi_\tau(a)$ to liczba, którą kodowanie dostarcza do liścia $\tau$: na poziomie $\ell$ stosujemy formę $\varphi_{\tau_\ell}$.
+    \item Przykład $L=1$: $\Phi_\lambda(a)=\sum_s\varphi_\lambda(s)\,a[s]$, czyli forma $\varphi_\lambda$ wyliczona na siedmiu liczbach $a[s]$.
+    \item Przykład $L=2$: $\Phi_{P_0P_{11}}(a)=\sum_{s,s'}\varphi_{P_0}(s)\varphi_{P_{11}}(s')\,a[ss']
+      =-\sum_{i=1}^{3}\big(a[x_ix_1]+a[x_ip_{11}]\big)$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Wkład wierzchołka do napisu i tablica $\Mult$}
+  \begin{definicja}
+    Wierzchołek $\tau_1\cdots\tau_k$ \textbf{wnosi wkład} do napisu wyjściowego $w$, jeśli $\tau_\ell$ wnosi wkład
+    do $w_\ell$ dla każdego poziomu $\ell\le k$. Zatem liść $\tau$ wnosi wkład do $w$ wtedy i tylko wtedy, gdy $\tau_\ell=P_{ij}$
+    na każdym poziomie $\ell$, na którym $w_\ell=z_{ij}$. Tam, gdzie $w_\ell=z_0$, $\tau_\ell$ jest dowolne.
+    \[
+      \Mult(a,b)[w]:=\sum_{\tau\text{ wnosi wkład do }w}\Phi_\tau(a)\,\Psi_\tau(b).\tag{2}
+    \]
+  \end{definicja}
+  \pause
+  \pause
+  \begin{przyklad}[$L=2$]
+    Do $w=z_{13}z_0$ wnosi wkład 10 liści $P_{13}\lambda$ (dowolne $\lambda$). Do $w=z_{13}z_{21}$ tylko liść $P_{13}P_{21}$.
+    Do $w=z_0z_0$ wszystkie $100$ liści.
+  \end{przyklad}
+\end{frame}
+
+\begin{frame}{Lemat 7}
+  \begin{lemat}{7}
+    W liściu $\tau$ algorytm $\Full(a,b)$ mnoży $\Phi_\tau(a)$ przez $\Psi_\tau(b)$ i zwraca $\Mult(a,b)$.
+  \end{lemat}
+  \pause
+  \begin{proof}\small
+    \setlength{\abovedisplayskip}{3pt}\setlength{\belowdisplayskip}{3pt}
+    Indukcja po $L$.
+    \textbf{$L=0$:} jedynym liściem jest pusty napis $\tau$. Iloczyny po poziomach są puste, więc
+    $\Phi_\tau(a)=a$, $\Psi_\tau(b)=b$, a krok (1) zwraca $ab=\Mult(a,b)$.
+
+    \uncover<3->{\textbf{$L\ge1$, kodowanie:} dla liścia $\lambda\tau'$ (składnik $\lambda$, potem napis $\tau'$ długości $L-1$),
+    ponieważ $a_s[u']=a[su']$:
+    \[
+      \Phi_{\lambda\tau'}(a)=\sum_s\varphi_\lambda(s)\sum_{u'}a[su']\prod_{\ell=1}^{L-1}\varphi_{\tau'_\ell}(u'_\ell)
+      =\sum_s\varphi_\lambda(s)\,\Phi_{\tau'}(a_s)=\Phi_{\tau'}\Big(\sum_s\varphi_\lambda(s)a_s\Big)=\Phi_{\tau'}(A_\lambda).
+    \]
+    Podobnie $\Psi_{\lambda\tau'}(b)=\Psi_{\tau'}(B_\lambda)$.}
+    \uncover<4->{Z założenia indukcyjnego liść $\lambda\tau'$ mnoży $\Phi_{\lambda\tau'}(a)$ przez $\Psi_{\lambda\tau'}(b)$ oraz
+    $C_\lambda[w']=\sum_{\tau'}\Phi_{\lambda\tau'}(a)\Psi_{\lambda\tau'}(b)$, suma po $\tau'$ wnoszących wkład do $w'$.}
+
+    \uncover<5->{\textbf{Dekodowanie:} do $zw'$ wnoszą wkład dokładnie liście $\lambda\tau'$, gdzie $\lambda$ wnosi wkład do $z$, a $\tau'$ do $w'$.
+    Zatem $c[zw']=\sum_{\lambda\text{ wnosi wkład do }z}C_\lambda[w']$ zgadza się z (2).}
+  \end{proof}
+\end{frame}
+
+\begin{frame}{Współczynniki $\gamma$ i Lemat 8}
+  \small
+  Dla zmiennej lewej $s$, prawej $t$ i wyjściowej $z$ niech
+  \[
+    \gamma(s,t,z):=\sum_{\lambda\text{ wnosi wkład do }z}\varphi_\lambda(s)\,\psi_\lambda(t).\tag{3}
+  \]
+  To współczynnik przy jednomianie $stz$ po lewej stronie tożsamości. Z Lematu 6 jest to też współczynnik przy $stz$ w $G+E$, więc $\gamma(s,t,z)\in\{0,\pm1\}$.
+  \pause
+  \begin{lemat}{8}
+    Dla wszystkich tablic $a,b$ i każdego napisu wyjściowego $w$:
+    \[
+      \Mult(a,b)[w]=\sum_{u,v}\gamma(u_1,v_1,w_1)\,\gamma(u_2,v_2,w_2)\cdots\gamma(u_L,v_L,w_L)\;a[u]\,b[v],
+    \]
+    gdzie suma przebiega po wszystkich lewych napisach $u$ i prawych napisach $v$.
+  \end{lemat}
+\end{frame}
+
+\begin{frame}{Dowód Lematu 8}
+  \begin{proof}
+    Z definicji $\Phi_\tau$, $\Psi_\tau$:
+    \(\Phi_\tau(a)\Psi_\tau(b)=\sum_{u,v}a[u]b[v]\prod_{\ell=1}^{L}\varphi_{\tau_\ell}(u_\ell)\psi_{\tau_\ell}(v_\ell).\)
+    \pause
+    Zatem współczynnik przy $a[u]b[v]$ w $\Mult(a,b)[w]$ to
+    \[
+      \sum_{\tau\text{ wnosi wkład do }w}\ \prod_{\ell=1}^{L}\varphi_{\tau_\ell}(u_\ell)\psi_{\tau_\ell}(v_\ell).
+    \]
+    \pause
+    Liście wnoszące wkład do $w$ to te, których składnik na poziomie $\ell$ wnosi wkład do $w_\ell$,
+    \textbf{niezależnie dla każdego $\ell$}. Suma iloczynów jest więc iloczynem sum:
+    \[
+      \prod_{\ell=1}^{L}\ \sum_{\tau_\ell\text{ wnosi wkład do }w_\ell}\varphi_{\tau_\ell}(u_\ell)\psi_{\tau_\ell}(v_\ell)
+      \overset{(3)}{=}\prod_{\ell=1}^{L}\gamma(u_\ell,v_\ell,w_\ell).\qedhere
+    \]
+  \end{proof}
+  \pause
+  \small\textbf{Dwa opisy $\Mult$:}
+  \begin{itemize}
+    \item Lemat 8 posłuży do odczytania iloczynów macierzy (2.3.3).
+    \item Lemat 7 (suma po liściach) posłuży do pomijania liści, które nie wnoszą wkładu do chcianych wpisów (2.4).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Zbiór wewnętrzny, część wewnętrzna i zewnętrzna}
+  \begin{definicja}
+    \begin{itemize}
+      \item \textbf{Zbiór wewnętrzny} napisu to zbiór poziomów, na których ma on zmienną wewnętrzną:
+        $\Wew{p}$ (zamiast $\Zew{x}$) dla lewego, $\Wew{q}$ (zamiast $\Zew{y}$) dla prawego, $\Wew{z_0}$ (zamiast $\Zew{z_{ij}}$) dla wyjściowego.
+      \item \textbf{Część wewnętrzna} to napis jego zmiennych na poziomach zbioru wewnętrznego (w kolejności poziomów),
+        a \textbf{część zewnętrzna} to napis zmiennych na pozostałych poziomach.
+    \end{itemize}
+    Napis jest wyznaczony przez swój zbiór wewnętrzny, część zewnętrzną i część wewnętrzną.
+  \end{definicja}
+  \pause
+  \centering
+  \begin{tikzpicture}[c/.style={draw,minimum width=0.8cm,minimum height=0.5cm,font=\small}]
+    \foreach \v [count=\i] in {x_1,p_{11},x_2,x_3,p_{22},x_1} {
+      \ifnum\i=2 \node[c,fill=tlowew] at (\i*0.8,0) {$\v$};
+      \else\ifnum\i=5 \node[c,fill=tlowew] at (\i*0.8,0) {$\v$};
+      \else \node[c] at (\i*0.8,0) {$\v$};\fi\fi
+      \node[font=\tiny,szary] at (\i*0.8,0.5) {\i};
+    }
+    \node[anchor=east] at (0.3,0) {$u=$};
+    \node[anchor=west,font=\small,align=left] at (5.3,0)
+      {zbiór wewnętrzny $Q=\{2,5\}$, część wewnętrzna \Wew{$p_{11}p_{22}$},\\ część zewnętrzna \Zew{$x_1x_2x_3x_1$}\quad ($L=6$)};
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Parametry i indeksowanie macierzy napisami}
+  \small
+  Ustalmy $m\ge1$ oraz
+  \[
+    N_0:=3^{L-m},\qquad D:=4^m.
+  \]
+  \begin{itemize}
+    \item Z $2^L$ iloczynów (po jednym na zbiór $Q\subseteq\{1,\dots,L\}$ poziomów ze skalarnym) używamy tylko
+      $\binom Lm$ tych z $|Q|=m$. Wejścia pozostałych ustawiamy na zero.
+    \item Iloczyn dla takiego $Q$ to macierz $N_0\times D$ razy $D\times N_0$: $L-m$ poziomów zewnętrznych
+      (po 3 zmienne) daje $N_0=3^{L-m}$ wierszy i kolumn, a $m$ poziomów wewnętrznych (po 4 zmienne) daje
+      $D=4^m$ składników sumy.
+  \end{itemize}
+  \pause
+  \small
+  \textbf{Indeksowanie:}
+  \begin{itemize}
+    \item Macierz $N_0\times D$: wiersze to napisy z $L-m$ \Zew{zewnętrznych lewych} zmiennych ($x$),
+      kolumny to napisy z $m$ \Wew{wewnętrznych lewych} ($p$).
+    \item Macierz $D\times N_0$: wiersze to napisy z $m$ \Wew{wewnętrznych prawych} ($q$),
+      kolumny to napisy z \Zew{zewnętrznych prawych} ($y$).
+    \item Kolumnę $\pi=p_{i_1j_1}\cdots p_{i_mj_m}$ łączymy z wierszem $\pi'=q_{i_1j_1}\cdots q_{i_mj_m}$
+      (te same indeksy):
+      \[
+        (AB)[r,c]:=\sum_\pi A[r,\pi]\,B[\pi',c],
+      \]
+      suma po wszystkich $D$ napisach $\pi$. Wiersze $r$ wyniku to napisy z $x$, a kolumny $c$ to napisy z $y$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Kodowanie macierzy w tablicy}
+  Niech $Q\subseteq\{1,\dots,L\}$, $|Q|=m$, i $K:=\binom Lm$.
+  \begin{itemize}
+    \item Lewe napisy $u$ o zbiorze wewnętrznym $Q$ indeksują wpisy macierzy $X_Q$ wymiaru $N_0\times D$:
+      $X_Q[u]$ to wpis w wierszu \Zew{(część zewnętrzna $u$)} i kolumnie \Wew{(część wewnętrzna $u$)}.
+    \item Prawe napisy $v$ o zbiorze wewnętrznym $Q$ indeksują $Y_Q$ wymiaru $D\times N_0$: wiersz to \Wew{część wewnętrzna}, kolumna to \Zew{część zewnętrzna}.
+    \item Napis wyjściowy $w$ o zbiorze wewnętrznym $Q$ ze zmiennymi $z_{i_1j_1},\dots,z_{i_{L-m}j_{L-m}}$ poza $Q$ wskazuje
+      wpis $(X_QY_Q)[w]$ w wierszu $x_{i_1}\cdots x_{i_{L-m}}$ i kolumnie $y_{j_1}\cdots y_{j_{L-m}}$.
+  \end{itemize}
+  \pause
+  \begin{block}{Wejście: macierze ułożone obok siebie}
+    Dla każdego z $K$ zbiorów $Q$ bierzemy \emph{dowolne} $X_Q$ ($N_0\times D$) i $Y_Q$ ($D\times N_0$) i ustawiamy
+    \[
+      a[u]:=X_Q[u],\qquad b[v]:=Y_Q[v]
+    \]
+    dla napisów o zbiorze wewnętrznym $Q$ z $|Q|=m$, a $a[u]:=0$, $b[v]:=0$ dla wszystkich pozostałych napisów.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Od napisów do wpisów macierzy ($L=6$, $m=2$)}
+  \centering
+  \begin{tikzpicture}[c/.style={draw,minimum width=0.72cm,minimum height=0.48cm,font=\scriptsize,inner sep=1pt}]
+    \foreach \row/\name/\vals in {0/u/{x_1,p_{11},x_2,x_3,p_{22},x_1},
+                                   -0.8/v/{y_3,q_{11},y_1,y_3,q_{22},y_2},
+                                   -1.6/w/{z_{13},z_0,z_{21},z_{33},z_0,z_{12}}} {
+      \node[anchor=east,font=\small] at (0.25,\row) {$\name$:};
+      \foreach \v [count=\i] in \vals {
+        \ifnum\i=2 \node[c,fill=tlowew] at (\i*0.72,\row) {$\v$};
+        \else\ifnum\i=5 \node[c,fill=tlowew] at (\i*0.72,\row) {$\v$};
+        \else \node[c] at (\i*0.72,\row) {$\v$};\fi\fi
+      }
+    }
+    \node[font=\scriptsize,anchor=west,align=left] at (4.8,0) {\Zew{$x_1x_2x_3x_1$}: wiersz $u$ w $X_Q$,\quad \Wew{$p_{11}p_{22}$}: kolumna};
+    \node[font=\scriptsize,anchor=west,align=left] at (4.8,-0.8) {\Wew{$q_{11}q_{22}$}: wiersz $v$ w $Y_Q$,\quad \Zew{$y_3y_1y_3y_2$}: kolumna};
+    \node[font=\scriptsize,anchor=west,align=left] at (4.8,-1.6) {wiersz \Zew{$x_1x_2x_3x_1$} i kolumna \Zew{$y_3y_1y_3y_2$} odczytane z $z_{ij}$};
+    \node[font=\scriptsize] at (2.5,-2.2) {poziomy $\ell=1,\dots,6$; cieniowane: $Q=\{2,5\}$};
+    % macierze
+    \begin{scope}[shift={(1,-6.2)},visible on=<2->]
+      \draw (0,0) rectangle (0.8,3); \node[font=\scriptsize] at (0.4,3.3) {$X_Q$: $81\times16$};
+      \fill[blue!30] (0,2.1) rectangle (0.8,2.25);
+      \node[font=\tiny,anchor=east] at (0,2.17) {wiersz $x_1x_2x_3x_1$};
+      \node at (1.3,1.5) {$\cdot$};
+      \draw (1.8,2.2) rectangle (4.8,3); \node[font=\scriptsize] at (3.3,3.3) {$Y_Q$: $16\times81$};
+      \fill[blue!30] (3.9,2.2) rectangle (4.05,3);
+      \node[font=\tiny] at (3.97,1.95) {kolumna $y_3y_1y_3y_2$};
+      \node at (5.3,1.5) {$=$};
+      \draw (5.8,0) rectangle (8.8,3); \node[font=\scriptsize] at (7.3,3.3) {$X_QY_Q$: $81\times81$};
+      \fill[chciane] (6.0+1.9,2.1) rectangle (6.15+1.9,2.25);
+      \draw[chciane,-{Stealth}] (8.2,2.17) -- (9.3,2.17) node[right,font=\scriptsize] {$(X_QY_Q)[w]$};
+    \end{scope}
+  \end{tikzpicture}
+  \vspace{0.2em}
+
+  \uncover<3->{Jedno uruchomienie $\Full$ liczy wszystkie $\binom62=15$ iloczynów $X_QY_Q$, po jednym na każdy $Q$ rozmiaru 2.}
+\end{frame}
+
+\begin{frame}{Przykład $L=2$, $m=1$: gdzie leżą macierze w tablicach}
+  $N_0=3$, $D=4$, $K=\binom21=2$: dwa iloczyny $3\times4$ razy $4\times3$, dla $Q=\{1\}$ i $Q=\{2\}$.
+  \begin{columns}[T]
+    \begin{column}{0.42\textwidth}
+      \centering
+      \begin{tikzpicture}[scale=0.36]
+        \fill[black!10] (0,4) rectangle (3,7);
+        \fill[orange!35] (3,4) rectangle (7,7);
+        \fill[green!30] (0,0) rectangle (3,4);
+        \fill[black!10] (3,0) rectangle (7,4);
+        \draw[step=1,szary] (0,0) grid (7,7);
+        \draw[thick] (0,0) rectangle (7,7);
+        \foreach \s [count=\i] in {x_1,x_2,x_3,p_{11},p_{12},p_{21},p_{22}} {
+          \node[font=\tiny,anchor=east] at (0,{7.5-\i}) {$\s$};
+          \node[font=\tiny,rotate=90,anchor=west] at ({\i-0.5},7.1) {$\s$};
+        }
+        \node[font=\scriptsize] at (1.5,5.5) {$0$};
+        \node[font=\scriptsize] at (5,5.5) {$X_{\{2\}}$};
+        \node[font=\scriptsize] at (1.5,2) {$X_{\{1\}}^{\!\top}$};
+        \node[font=\scriptsize] at (5,2) {$0$};
+        \node[font=\scriptsize] at (3.5,-0.9) {tablica $a$: wiersz $u_1$, kolumna $u_2$};
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{0.56\textwidth}
+      \centering
+      \begin{tikzpicture}[scale=0.3]
+        \fill[black!10] (0,1) rectangle (9,10);
+        \fill[orange!35] (9,1) rectangle (10,10);
+        \fill[green!30] (0,0) rectangle (9,1);
+        \fill[black!10] (9,0) rectangle (10,1);
+        \draw[step=1,szary] (0,0) grid (10,10);
+        \draw[thick] (0,0) rectangle (10,10);
+        \foreach \z [count=\i] in {z_{11},z_{12},z_{13},z_{21},z_{22},z_{23},z_{31},z_{32},z_{33},z_0} {
+          \node[font=\tiny,anchor=east] at (0,{10.5-\i}) {$\z$};
+          \node[font=\tiny,rotate=90,anchor=west] at ({\i-0.5},10.1) {$\z$};
+        }
+        \node[font=\tiny,align=center] at (4.5,5.5) {$|Q|\ne m$\\ (nie używamy)};
+        \node[font=\scriptsize,anchor=west] at (10.3,5.5) {$X_{\{2\}}Y_{\{2\}}$};
+        \node[font=\scriptsize] at (4.5,-0.9) {$X_{\{1\}}Y_{\{1\}}$};
+        \node[font=\scriptsize] at (5,-2.4) {tablica wyników: wiersz $w_1$, kolumna $w_2$};
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+  \vspace{0.2em}
+  \small
+  \begin{itemize}
+    \item $u=x_ip_{jk}$ ma zbiór wewnętrzny $\{2\}$ i wiersz $x_i$, kolumnę $p_{jk}$ w $X_{\{2\}}$. Napis $u=p_{jk}x_i$ ma $\{1\}$, a $x_i$ jest teraz na poziomie 2 (stąd transpozycja na rysunku).
+    \item Napis $w=z_{ij}z_0$ to wpis $(X_{\{2\}}Y_{\{2\}})[x_i,y_j]$, a $w=z_0z_{ij}$ to wpis $(X_{\{1\}}Y_{\{1\}})[x_i,y_j]$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Lemat 9: $\Full$ naprawdę mnoży macierze}
+  \begin{lemat}{9}
+    Dla tablic wejściowych $a,b$ zdefiniowanych powyżej i każdego napisu wyjściowego $w$, którego zbiór wewnętrzny $Q$
+    ma dokładnie $m$ elementów,
+    \[
+      \Mult(a,b)[w]=(X_QY_Q)[w].\tag{4}
+    \]
+  \end{lemat}
+  \pause
+  \begin{proof}[Dowód (1/2)]
+    Z Lematu 8: $\Mult(a,b)[w]=\sum_{u,v}\gamma(u_1,v_1,w_1)\cdots\gamma(u_L,v_L,w_L)\,a[u]b[v]$, gdzie
+    $\gamma(s,t,z)$ to współczynnik przy $stz$ w $G+E$. Sprawdzamy, które składniki mogą być niezerowe.
+    \begin{enumerate}
+      \item<3-> $a[u]b[v]\ne0$ wymaga, by zbiory wewnętrzne $u$ i $v$ miały \textbf{dokładnie $m$} elementów.
+      \item<4-> \textbf{Poziom $\ell\in Q$:} $w_\ell=z_0$. Jedyne jednomiany $G+E$ z $z_0$ to $p_{ij}q_{ij}z_0$ (współczynnik 1),
+        bo $E$ zawiera tylko $z_{ij}$. Zatem $(u_\ell,v_\ell)=(p_{ij},q_{ij})$ dla pewnych $i,j$.
+        Czyli $u$ i $v$ mają zmienną wewnętrzną na każdym poziomie $Q$, a ich zbiory wewnętrzne
+        (rozmiaru $m$) są \textbf{równe $Q$}.
+    \end{enumerate}
+  \end{proof}
+\end{frame}
+
+\begin{frame}{Dowód Lematu 9 (2/2) i dlaczego $E$ nie szkodzi}
+  \begin{proof}[Dowód (2/2)]
+    \begin{enumerate}\setcounter{enumi}{2}
+      \item \textbf{Poziom $\ell\notin Q$:} $w_\ell=z_{ij}$, a $u_\ell,v_\ell$ są zewnętrzne (zbiory wewnętrzne to dokładnie $Q$).
+        Jedyny jednomian $G+E$ z $z_{ij}$ \emph{bez zmiennej wewnętrznej} to $x_iy_jz_{ij}$ (współczynnik 1).
+        Zatem $(u_\ell,v_\ell)=(x_i,y_j)$.
+      \item<2-> Zostają składniki, w których $u$ ma zbiór wewnętrzny $Q$, część zewnętrzną równą wierszowi $r$ napisu $w$
+        i jakąś część wewnętrzną $\pi$, a $v$ ma zbiór wewnętrzny $Q$, część zewnętrzną równą kolumnie $c$ napisu $w$
+        i część wewnętrzną $\pi'$ o tych samych indeksach co $\pi$. Jest jeden taki składnik na każdy z $D$ napisów $\pi$,
+        ze współczynnikiem 1:
+        \[
+          \sum_\pi X_Q[r,\pi]\,Y_Q[\pi',c]=(X_QY_Q)[w].\qedhere
+        \]
+    \end{enumerate}
+  \end{proof}
+\end{frame}
+
+\begin{frame}{Dlaczego $E$ nie szkodzi: podsumowanie 2.3.3}
+  \idea{Każdy jednomian $E$ ma \Wew{wewnętrzną zmienną wejściową} przy \Zew{zewnętrznym $z_{ij}$}. Na poziomie spoza $Q$
+    dałoby to $u$ lub $v$ o zbiorze wewnętrznym rozmiaru $>m$, a tam $a[u]b[v]=0$. \textbf{Błąd $E$ ginie.}}
+  \vspace{0.8em}
+  \begin{przyklad}[$L=2$, $m=1$, $w=z_{21}z_0$, czyli $Q=\{2\}$]
+    Jednomian $x_2\qh_{21}z_{21}=x_2q_{21}z_{21}$ z $E$ daje $\gamma(x_2,q_{21},z_{21})=1$. Ale na poziomie 2 ($w_2=z_0$)
+    napis $v$ musi mieć $q_{jk}$, więc $v=q_{21}q_{jk}$ ma zbiór wewnętrzny $\{1,2\}$ rozmiaru $2\ne m$.
+    Zatem $b[v]=0$ i ten składnik sumy z Lematu 8 znika.
+  \end{przyklad}
+  \uncover<2->{Podsumowanie: jedno uruchomienie $\Full$ ($10^L$ mnożeń) liczy wszystkie $K$ iloczynów $X_QY_Q$.
+    Mogą być zupełnie niezależne. Za chwilę wstawimy tę samą macierz do różnych kopii $X_Q$.}
+\end{frame}
+
+\begin{frame}{Kafelkowanie: iloczyn $N\times D\times N$ z iloczynów $N_0\times D\times N_0$}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \footnotesize
+      \begin{itemize}
+        \item Tniemy $X$ na \textbf{bloki wierszy} po $N_0$ kolejnych wierszy, a $Y$ na \textbf{bloki kolumn} po $N_0$ kolumn.
+          $XY$ składa się z iloczynów blok wierszy $\times$ blok kolumn, każdy kształtu $N_0\times D$ razy $D\times N_0$ (krótko: $N_0\times D\times N_0$).
+        \item<2-> $K_0:=\lfloor\sqrt K\rfloor$. Grupujemy bloki w \textbf{pasy} po $K_0$ kolejnych bloków.
+          \textbf{Kafelek} to pas wierszy wraz z pasem kolumn. Każdy kafelek to \textbf{jedno uruchomienie $\Full$}.
+        \item<3-> Ustalamy $K_0^2\le K$ różnych zbiorów $Q$ rozmiaru $m$ (na rysunku $Q_1,\dots,Q_9$), po jednym na iloczyn blokowy w siatce,
+          \emph{takie same w każdym kafelku}. $X_Q$, $Y_Q$ to blok wierszy i blok kolumn iloczynu blokowego z tym $Q$,
+          a dla pozostałych $Q$: $X_Q=Y_Q=0$.
+        \item<4-> Lemat 9: jedno $\Full$ liczy wszystkie $K_0^2$ iloczynów kafelka. Wszystkie kafelki dają całe $XY$.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.43\textwidth}
+      \centering
+      \begin{tikzpicture}[scale=0.5]
+        % X
+        \draw (0,0) rectangle (0.7,6);
+        \foreach \i in {1,...,5} \draw[szary] (0,\i) -- (0.7,\i);
+        \draw[very thick] (0,3) -- (0.7,3);
+        \node[font=\scriptsize] at (0.35,6.4) {$X$};
+        % Y
+        \draw (1.2,6.5) rectangle (7.2,7.2);
+        \foreach \i in {1,...,5} \draw[szary] ({1.2+\i},6.5) -- ({1.2+\i},7.2);
+        \draw[very thick] (4.2,6.5) -- (4.2,7.2);
+        \node[font=\scriptsize] at (7.6,6.85) {$Y$};
+        % XY
+        \draw[step=1,szary,shift={(1.2,0)}] (0,0) grid (6,6);
+        \draw[very thick] (1.2,0) rectangle (7.2,6);
+        \draw[very thick] (4.2,0) -- (4.2,6); \draw[very thick] (1.2,3) -- (7.2,3);
+        \node[font=\scriptsize,below] at (4.2,0) {$N=6N_0$, \ $K_0=3$: 4 kafelki};
+        \only<2->{
+          \fill[red!15] (0,0) rectangle (0.7,3);
+          \fill[red!15] (1.2,6.5) rectangle (4.2,7.2);
+          \fill[red!15] (1.2,0) rectangle (4.2,3);
+          \draw[step=1,szary,shift={(1.2,0)}] (0,0) grid (3,3);
+          \draw[very thick,chciane] (1.2,0) rectangle (4.2,3);
+        }
+        \only<3->{
+          \foreach \r in {0,1,2} \foreach \c in {0,1,2} {
+            \pgfmathtruncatemacro{\q}{3*\r+\c+1}
+            \node[font=\tiny] at ({1.7+\c},{2.5-\r}) {$Q_{\q}$};
+          }
+        }
+        \node<2->[font=\scriptsize,align=left,anchor=north west] at (0,-0.9)
+          {kafelek: pas wierszy 2 $\times$ pas kolumn 1,\\ $K_0^2=9$ iloczynów blokowych z jednej\\
+           lewej tablicy (pas wierszy) i jednej prawej (pas kolumn)};
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Dlaczego siatka i ile to kosztuje}
+  \begin{itemize}
+    \item Bloki parujemy w siatkę, a nie dowolnie, więc \textbf{lewa tablica kafelka zależy tylko od jego pasa wierszy},
+      a prawa tylko od pasa kolumn. Pozwoli to \alert{współdzielić kodowania} między kafelkami (2.4.1).
+    \item Najpierw dopełniamy $N$ do wielokrotności $K_0N_0$ zerowymi wierszami $X$ i kolumnami $Y$.
+      To co najwyżej podwaja $N$, bo $N\ge K_0N_0$ (pokażemy w 2.4.4).
+  \end{itemize}
+  \pause
+  \textbf{Koszt.} Niech $M:=KN_0^2$ będzie liczbą wpisów wyniku we wszystkich $K$ iloczynach kafelka.
+  Ponieważ $K_0\ge\sqrt K/2$:
+  \[
+    \#\text{kafelków}=\Big(\frac{N}{K_0N_0}\Big)^2=\frac{N^2}{K_0^2N_0^2}\le\frac{N^2}{(K/4)N_0^2}=\frac{4N^2}{M}.
+  \]
+  \pause
+  Razem $O\big(\frac{N^2}{M}\cdot L\cdot10^L\big)$ operacji, czyli $O(L\cdot10^L/M)$ na wpis $XY$.
+  \begin{itemize}
+    \item Przy $L=10m$ daje to $N^2\operatorname{poly}(L)$, a przy wybranym przez nas $L=19m$ około $N^2D^{0.2}$.
+    \item<4-> Mimo to wybieramy $L=19m$. Dlaczego, zobaczymy w 2.4.3 (rzadkość).
+    \item<4-> Kafelkowanie powiększa tylko wymiary zewnętrzne, więc obsługuje mniejsze $D$ niż algorytm Coppersmitha z tej samej tożsamości
+      ($D\approx N^{0.1204}$ zamiast $N^{0.1402}$ [Cop82]). Za to \alert{każdy wpis $XY$ to jedno wyjście jednego uruchomienia $\Full$}.
+  \end{itemize}
+\end{frame}

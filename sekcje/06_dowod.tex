@@ -2,6 +2,31 @@
 \section{2.4.4 Dowód Twierdzenia 5}
 % ======================================================================
 
+\begin{frame}{Algorytm}
+  \begin{enumerate}
+    \item Policz kodowania wszystkich pasów wierszy i pasów kolumn (2.4.1).
+    \item<2-> Każda chciana pozycja $(I,J)\in W$ leży w \textbf{jednym} kafelku $T$ i jest wskazana przez \textbf{jeden} napis
+      wyjściowy kafelka $T$. Jego zbiór wewnętrzny to zbiór $Q$ iloczynu blokowego zawierającego $(I,J)$, a wiersz i kolumna to wiersz
+      i kolumna $(I,J)$ wewnątrz tego iloczynu blokowego (2.3.3, 2.3.4).
+    \item<3-> Dla kafelka $T$ niech $W_T$ będzie zbiorem napisów wyjściowych chcianych pozycji w $T$.
+    \item<4-> Dla każdego kafelka $T$ z $W_T\ne\emptyset$ uruchom $\Pruned(W_T)$.
+    \item<5-> Dla każdego $(I,J)\in W$ zwróć wartość przy jego napisie wyjściowym.
+  \end{enumerate}
+  \uncover<6->{\vspace{0.5em}\textbf{Poprawność:} z Lematu 9 (napis wskazuje właściwy wpis iloczynu blokowego, czyli $(XY)[I,J]$) i Lematu 10
+    ($\Pruned$ zwraca $\Mult$ na $W_T$).}
+  \uncover<7->{
+  \begin{center}
+    \begin{tikzpicture}[b/.style={draw,rounded corners,fill=blue!8,font=\scriptsize,align=center,minimum height=0.9cm},
+        arr/.style={-{Stealth},thick}]
+      \node[b] (e) {kodowania\\ pasów};
+      \node[b,right=0.6cm of e] (w) {$W\to W_T$\\ (napisy)};
+      \node[b,right=0.6cm of w,fill=red!12] (p) {$\Pruned(W_T)$\\ dla każdego $T$};
+      \node[b,right=0.6cm of p] (o) {odczyt\\ $(XY)[I,J]$};
+      \draw[arr] (e)--(w); \draw[arr] (w)--(p); \draw[arr] (p)--(o);
+    \end{tikzpicture}
+  \end{center}}
+\end{frame}
+
 \begin{frame}{Konsekwencja (a) założenia $N\ge D^{18}$}
   Ustalamy $D=4^m$ i $L=19m$. Mamy $D^{18}=4^{18m}$, więc potęgi $m$-te porównujemy, porównując ich podstawy.
   \pause
@@ -30,31 +55,6 @@
   \[
     \frac{2N}{K_0N_0}\cdot O(10^L)\overset{(6)}{\le}\frac{2N}{K_0N_0}\cdot O\big(2^{-m/9}NN_0\big)=O\Big(\frac{2^{-m/9}N^2}{K_0}\Big)=O\big(2^{-m/9}N^2\big).
   \]
-\end{frame}
-
-\begin{frame}{Algorytm}
-  \begin{enumerate}
-    \item Policz kodowania wszystkich pasów wierszy i pasów kolumn (2.4.1).
-    \item<2-> Każda chciana pozycja $(I,J)\in W$ leży w \textbf{jednym} kafelku $T$ i jest wskazana przez \textbf{jeden} napis
-      wyjściowy kafelka $T$. Jego zbiór wewnętrzny to zbiór $Q$ iloczynu blokowego zawierającego $(I,J)$, a wiersz i kolumna to wiersz
-      i kolumna $(I,J)$ wewnątrz tego iloczynu blokowego (2.3.3, 2.3.4).
-    \item<3-> Dla kafelka $T$ niech $W_T$ będzie zbiorem napisów wyjściowych chcianych pozycji w $T$.
-    \item<4-> Dla każdego kafelka $T$ z $W_T\ne\emptyset$ uruchom $\Pruned(W_T)$.
-    \item<5-> Dla każdego $(I,J)\in W$ zwróć wartość przy jego napisie wyjściowym.
-  \end{enumerate}
-  \uncover<6->{\vspace{0.5em}\textbf{Poprawność:} z Lematu 9 (napis wskazuje właściwy wpis iloczynu blokowego, czyli $(XY)[I,J]$) i Lematu 10
-    ($\Pruned$ zwraca $\Mult$ na $W_T$).}
-  \uncover<7->{
-  \begin{center}
-    \begin{tikzpicture}[b/.style={draw,rounded corners,fill=blue!8,font=\scriptsize,align=center,minimum height=0.9cm},
-        arr/.style={-{Stealth},thick}]
-      \node[b] (e) {kodowania\\ pasów};
-      \node[b,right=0.6cm of e] (w) {$W\to W_T$\\ (napisy)};
-      \node[b,right=0.6cm of w,fill=red!12] (p) {$\Pruned(W_T)$\\ dla każdego $T$};
-      \node[b,right=0.6cm of p] (o) {odczyt\\ $(XY)[I,J]$};
-      \draw[arr] (e)--(w); \draw[arr] (w)--(p); \draw[arr] (p)--(o);
-    \end{tikzpicture}
-  \end{center}}
 \end{frame}
 
 \begin{frame}{Koszt}

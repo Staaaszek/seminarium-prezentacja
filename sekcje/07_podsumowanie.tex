@@ -18,8 +18,24 @@
 
 \begin{frame}[c]
   \centering
+  \definecolor{claude}{HTML}{D97757}
+  \definecolor{diabel}{HTML}{8E44AD}
+  \begin{tikzpicture}[scale=1.25]
+    % rogi jak w emoji z diabłem (rysowane pod promieniami)
+    \foreach \s in {1,-1}
+      \fill[diabel,xscale=\s] (0.16,0.70) .. controls (0.45,0.92) and (0.72,1.12) .. (0.84,1.50)
+        .. controls (1.02,1.18) and (0.96,0.80) .. (0.60,0.50) -- cycle;
+    \foreach \kat/\dl in {74/1.00,116/1.02,146/0.94,180/0.95,212/0.90,239/0.92,
+                          272/0.95,311/1.00,343/0.88,5/0.88,36/0.96,95/0.80}
+      \fill[claude] ($(0,0)+(\kat+90:0.035)$) -- ($(\kat:\dl)+(\kat+90:0.075)$)
+        arc[start angle=\kat+90,end angle=\kat-90,radius=0.075]
+        -- ($(0,0)+(\kat-90:0.035)$) -- cycle;
+    \fill[claude] (0,0) circle (0.12);
+  \end{tikzpicture}
+
+  \vspace{0.8em}
   {\Huge\textcolor{structure}{\textbf{Koniec}}}
 
-  \vspace{1.5em}
+  \vspace{1em}
   {\large Stanisław Macura \quad Michał Chłopicki}
 \end{frame}
